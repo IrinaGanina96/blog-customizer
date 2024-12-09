@@ -1,6 +1,6 @@
 import { ArrowButton } from 'src/ui/arrow-button';
 import { Button } from 'src/ui/button';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import clsx from 'clsx';
 
 import styles from './ArticleParamsForm.module.scss';
@@ -9,6 +9,7 @@ import { Text } from 'src/ui/text';
 import { Select } from 'src/ui/select';
 import { RadioGroup } from 'src/ui/radio-group';
 import { Separator } from 'src/ui/separator';
+import { useClickOutside } from 'components/use-click-outside/useClickOutside';
 
 type ArticleParamsFormProps = {
 	articleState: ArticleStateType;
@@ -16,7 +17,7 @@ type ArticleParamsFormProps = {
 };
 
 export const ArticleParamsForm = (props: ArticleParamsFormProps) => {
-	const [isOpened, setIsOpened] = useState(false);
+	const [isMenuOpen, setIsMenuOpen] = useState(false);
 
 	const [fontFamilyOption, setFontFamilyOption] = useState(props.articleState.fontFamilyOption);
 	const [fontColor, setFontColor] = useState(props.articleState.fontColor);
@@ -24,12 +25,10 @@ export const ArticleParamsForm = (props: ArticleParamsFormProps) => {
 	const [contentWidth, setContentWidth] = useState(props.articleState.contentWidth);
 	const [fontSizeOption, setFontSizeOption] = useState(props.articleState.fontSizeOption);
 
-	const toggleOpen = () => {
-		setIsOpened(prev => !prev)
-	};
+	const menuRef = useRef<HTMLDivElement>(null);
 
-	const handleOverlayClick = () => {
-		setIsOpened(false);
+	const toggleOpen = () => {
+		setIsMenuOpen(prev => !prev)
 	};
 
 	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -53,13 +52,18 @@ export const ArticleParamsForm = (props: ArticleParamsFormProps) => {
 		setFontSizeOption(defaultArticleState.fontSizeOption)
 	};
 
+	useClickOutside({
+		menuRef: menuRef,
+		isMenuOpen: isMenuOpen,
+		setIsMenuOpen: () => setIsMenuOpen (false)
+	});
+
 	return (
 		<>
-			<ArrowButton isOpen={isOpened} onClick={toggleOpen} />
-			<div className={clsx(styles.overlay, isOpened && styles.overlay_open)} onClick={handleOverlayClick}>
-
-			</div>
-			<aside className={clsx(styles.container, isOpened && styles.open)}>
+		<div ref={menuRef}>
+			<ArrowButton isOpen={isMenuOpen} onClick={toggleOpen} />
+			<div className={clsx(styles.overlay, isMenuOpen && styles.overlay_open)} onClick={() => setIsMenuOpen(false)} />
+			<aside className={clsx(styles.container, isMenuOpen && styles.open)}>
 				<form className={styles.form} onSubmit={handleSubmit}>
 					<Text uppercase={true} weight={800} size={31}>
 						Задайте параметры
@@ -102,6 +106,7 @@ export const ArticleParamsForm = (props: ArticleParamsFormProps) => {
 					</div>
 				</form>
 			</aside>
+		</div>
 		</>
 	);
 };
